@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const { MongoClient, ServerApiVersion } = require('mongodb');
+require('dotenv').config()
 
 const app = express()
 const port = process.env.PORT || 5000
@@ -26,11 +27,14 @@ async function run() {
   try {
 
     client.connect();
-
-
-
     
+    const classesCollection = client.db('sportyZone').collection('classes')
 
+    // classes
+    app.get('/classes', async(req, res) => {
+        const result = await classesCollection.find().toArray()
+        res.send(result)
+    })
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
