@@ -30,10 +30,23 @@ async function run() {
     
     const classesCollection = client.db('sportyZone').collection('classes')
     const instructorsCollection = client.db('sportyZone').collection('instructors')
+    const selectedClassesCollection = client.db('sportyZone').collection('selectedClasses')
 
     // classes
     app.get('/classes', async(req, res) => {
         const result = await classesCollection.find().toArray()
+        res.send(result)
+    })
+    // selected classes
+    app.get('/selectedClasses', async(req, res) => {
+      const email = req.query.email
+      const query = {email: email}
+      const result = await selectedClassesCollection.find(query).toArray()
+      res.send(result)
+    })
+    app.post('/selectedClasses', async(req, res) => {
+        const item = req.body
+        const result = await selectedClassesCollection.insertOne(item)
         res.send(result)
     })
 
