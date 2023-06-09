@@ -2,6 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY)
 
 const app = express()
 const port = process.env.PORT || 5000
@@ -31,6 +32,7 @@ async function run() {
     const classesCollection = client.db('sportyZone').collection('classes')
     const instructorsCollection = client.db('sportyZone').collection('instructors')
     const selectedClassesCollection = client.db('sportyZone').collection('selectedClasses')
+    const paymentCollection = client.db('sportyZone').collection('payments')
 
     // classes
     app.get('/classes', async(req, res) => {
@@ -60,6 +62,28 @@ async function run() {
     app.get('/instructors', async(req, res) => {
         const result = await instructorsCollection.find().toArray()
         res.send(result)
+    })
+
+    // payment
+    app.post('/create-payment-intent',  async(req, res) => {
+       const { price } = req.body
+       const amount = price * 100
+       const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    })
+
+    app.post('/payments',  async(req, res) => {
+      const payment = req.body
+      const query = {_id : {$in: payment.selectedClasses.map(id => new ObjectId(id)) }}
+      const deleteResult = await selectedClassesCollection.deleteMany(query)
+      const result = await paymentCollection.insertOne(payment) 
+      res.send({result, deleteResult})
     })
 
     await client.db("admin").command({ ping: 1 });
