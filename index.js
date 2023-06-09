@@ -34,6 +34,7 @@ async function run() {
     const selectedClassesCollection = client.db('sportyZone').collection('selectedClasses')
     const paymentCollection = client.db('sportyZone').collection('payments')
     const enrolledCollection = client.db('sportyZone').collection('enrolled')
+    const usersCollection = client.db('sportyZone').collection('users')
 
     // classes
     app.get('/classes', async(req, res) => {
@@ -58,19 +59,7 @@ async function run() {
         const result = await selectedClassesCollection.deleteOne(query)
         res.send(result)
     })
-    // my enrolled class
-    app.post('/enrolled', async(req, res) => {
-        const enrolledItem = req.body
-        const result = await enrolledCollection.insertOne(enrolledItem)
-        res.send(result)
-    })
-    app.get('/enrolled', async(req, res) => {
-      const email = req.query.email
-      const query = {email: email}
-      const result = await enrolledCollection.find(query).toArray()
-      res.send(result)
-    })
-
+ 
     // instructors
     app.get('/instructors', async(req, res) => {
         const result = await instructorsCollection.find().toArray()
@@ -105,6 +94,34 @@ async function run() {
       res.send(result)
     })
 
+    // my enrolled class
+    app.post('/enrolled', async(req, res) => {
+        const enrolledItem = req.body
+        const result = await enrolledCollection.insertOne(enrolledItem)
+        res.send(result)
+    })
+    app.get('/enrolled', async(req, res) => {
+      const email = req.query.email
+      const query = {email: email}
+      const result = await enrolledCollection.find(query).toArray()
+      res.send(result)
+    })
+
+  // users
+  app.get('/users', async (req, res) => {
+    const result = await usersCollection.find().toArray();
+    res.send(result);
+  });
+  app.post('/users', async(req, res) => {
+      const user = req.body
+      const query = {email: user.email}
+      const existingUser = await usersCollection.findOne(query);
+      if(existingUser){
+        return res.send({ message: 'User already exists' })
+      }
+      const result = await usersCollection.insertOne(user)
+      res.send(result)
+  })
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
