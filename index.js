@@ -33,6 +33,7 @@ async function run() {
     const instructorsCollection = client.db('sportyZone').collection('instructors')
     const selectedClassesCollection = client.db('sportyZone').collection('selectedClasses')
     const paymentCollection = client.db('sportyZone').collection('payments')
+    const enrolledCollection = client.db('sportyZone').collection('enrolled')
 
     // classes
     app.get('/classes', async(req, res) => {
@@ -56,6 +57,18 @@ async function run() {
         const query = {_id: new ObjectId(id)}
         const result = await selectedClassesCollection.deleteOne(query)
         res.send(result)
+    })
+    // my enrolled class
+    app.post('/enrolled', async(req, res) => {
+        const enrolledItem = req.body
+        const result = await enrolledCollection.insertOne(enrolledItem)
+        res.send(result)
+    })
+    app.get('/enrolled', async(req, res) => {
+      const email = req.query.email
+      const query = {email: email}
+      const result = await enrolledCollection.find(query).toArray()
+      res.send(result)
     })
 
     // instructors
@@ -91,6 +104,7 @@ async function run() {
       const result = await paymentCollection.find(query).toArray()
       res.send(result)
     })
+
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
