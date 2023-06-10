@@ -41,6 +41,11 @@ async function run() {
         const result = await classesCollection.find().toArray()
         res.send(result)
     })
+    app.post('/classes', async(req, res) => {
+        const item = req.body
+        const result = await classesCollection.insertOne(item)
+        res.send(result)
+    })
     // selected classes
     app.get('/selectedClasses', async(req, res) => {
       const email = req.query.email
