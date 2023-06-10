@@ -53,6 +53,12 @@ async function run() {
       const result = await selectedClassesCollection.find(query).toArray()
       res.send(result)
     })
+    app.get('/selectedClasses/:id', async(req, res) => {
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await selectedClassesCollection.findOne(query)
+      res.send(result)
+    })
     app.post('/selectedClasses', async(req, res) => {
         const item = req.body
         const result = await selectedClassesCollection.insertOne(item)
@@ -68,6 +74,11 @@ async function run() {
     // instructors
     app.get('/instructors', async(req, res) => {
         const result = await instructorsCollection.find().toArray()
+        res.send(result)
+    })
+    app.post('/instructors', async(req, res) => {
+        const instructor = req.body
+        const result = await instructorsCollection.insertOne(instructor)
         res.send(result)
     })
 
@@ -87,15 +98,28 @@ async function run() {
 
     app.post('/payments',  async(req, res) => {
       const payment = req.body
-      const query = {_id : {$in: payment.selectedClasses.map(id => new ObjectId(id)) }}
-      const deleteResult = await selectedClassesCollection.deleteMany(query)
+      const id = payment.selectedClass
+      const name = payment.className
+      const query = {_id : new ObjectId(id)}
+      const deleteResult = await selectedClassesCollection.deleteOne(query)
+      if (deleteResult.deletedCount === 1) {
+        const updateResult = await classesCollection.updateOne(
+          { name: name },
+          { $inc: { availableSeats: -1 } }
+        )
+        if (updateResult.modifiedCount === 1) {
+          console.log('Available seats updated successfully');
+        } else {
+          console.log('Failed to update available seats');
+        }
+      }
       const result = await paymentCollection.insertOne(payment) 
       res.send({result, deleteResult})
     })
     app.get('/payments',  async(req, res) => {
       const email = req.query.email
       const query = {email: email}
-      const result = await paymentCollection.find(query).toArray()
+      const result = await paymentCollection.find(query).sort({ date: -1 }).toArray()
       res.send(result)
     })
 
