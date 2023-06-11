@@ -35,17 +35,85 @@ async function run() {
     const paymentCollection = client.db('sportyZone').collection('payments')
     const enrolledCollection = client.db('sportyZone').collection('enrolled')
     const usersCollection = client.db('sportyZone').collection('users')
+    const instructorClassesCollection = client.db('sportyZone').collection('instructorClasses')
+
+
+    // users
+      app.get('/users', async (req, res) => {
+        const result = await usersCollection.find().toArray();
+        res.send(result);
+      });
+      app.post('/users', async(req, res) => {
+          const user = req.body
+          const query = {email: user.email}
+          const existingUser = await usersCollection.findOne(query);
+          if(existingUser){
+            return res.send({ message: 'User already exists' })
+          }
+          const result = await usersCollection.insertOne(user)
+          res.send(result)
+      })
+      app.get('/users/admin/:email', async (req, res) => {
+        const email = req.params.email;
+        const query = { email: email }
+        const user = await usersCollection.findOne(query);
+        const result = { admin: user?.role === "admin" }
+        res.send(result);
+      });
+
+      app.get('/users/instructor/:email', async (req, res) => {
+        const email = req.params.email;
+        const query = { email: email }
+        const user = await usersCollection.findOne(query);
+        const result = { instructor: user?.role === "instructor" }
+        res.send(result);
+      });
+
+      app.patch('/users/admin/:id', async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            role: "admin"
+          },
+        };
+        const result = await usersCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      });
+
+      app.patch('/users/instructor/:id', async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            role: "instructor"
+          },
+        };
+        const result = await usersCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      });
 
     // classes
     app.get('/classes', async(req, res) => {
         const result = await classesCollection.find().toArray()
         res.send(result)
     })
-    app.post('/classes', async(req, res) => {
-        const item = req.body
-        const result = await classesCollection.insertOne(item)
+    app.get('/instructorClasses', async(req, res) => {
+        const email = req.query.email
+        const query = {email: email}
+        const result = await instructorClassesCollection.find(query).toArray()
         res.send(result)
     })
+    app.get('/instructorAllClasses', async(req, res) => {
+      const result = await instructorClassesCollection.find().toArray()
+      res.send(result)
+    })
+    app.post('/instructorClasses', async(req, res) => {
+        const item = req.body
+        const result = await instructorClassesCollection.insertOne(item)
+        res.send(result)
+    })
+
     // selected classes
     app.get('/selectedClasses', async(req, res) => {
       const email = req.query.email
@@ -136,63 +204,7 @@ async function run() {
       res.send(result)
     })
 
-  // users
-  app.get('/users', async (req, res) => {
-    const result = await usersCollection.find().toArray();
-    res.send(result);
-  });
-  app.post('/users', async(req, res) => {
-      const user = req.body
-      const query = {email: user.email}
-      const existingUser = await usersCollection.findOne(query);
-      if(existingUser){
-        return res.send({ message: 'User already exists' })
-      }
-      const result = await usersCollection.insertOne(user)
-      res.send(result)
-  })
-  app.get('/users/admin/:email',  async (req, res) => {
-    const email = req.params.email;
-    const query = { email: email }
-    const user = await usersCollection.findOne(query);
-    const result = { admin: user?.role === 'admin' }
-    res.send(result);
-  })
-  app.get('/users/instructor/:email',  async (req, res) =>{
-    const email = req.params.email
-    const query = {email: email}
-    const user = await usersCollection.findOne(query)
-    const result = {instructor: user?.role === 'instructor'}
-    res.send(result)
-  })
-  app.patch('/users/admin/:id', async (req, res) => {
-    const id = req.params.id;
-    console.log(id);
-    const filter = { _id: new ObjectId(id) };
-    const updateDoc = {
-      $set: {
-        role: 'admin'
-      },
-    };
-
-    const result = await usersCollection.updateOne(filter, updateDoc);
-    res.send(result);
-
-  })
-  app.patch('/users/instructor/:id', async (req, res) => {
-    const id = req.params.id;
-    console.log(id);
-    const filter = { _id: new ObjectId(id) };
-    const updateDoc = {
-      $set: {
-        role: 'instructor'
-      },
-    };
-
-    const result = await usersCollection.updateOne(filter, updateDoc);
-    res.send(result);
-
-  })
+ 
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
