@@ -105,14 +105,20 @@ async function run() {
     })
 
     // instructor classes
-    app.get('/instructorClasses', async(req, res) => {
-        const email = req.query.email
-        const query = {email: email}
-        const result = await instructorClassesCollection.find(query).toArray()
-        res.send(result)
-    })
     app.get('/instructorAllClasses', async(req, res) => {
       const result = await instructorClassesCollection.find().toArray()
+      res.send(result)
+    })
+    app.get('/instructorClasses', async(req, res) => {
+      const email = req.query.email
+      const query = {email: email}
+      const result = await instructorClassesCollection.find(query).toArray()
+      res.send(result)
+    })
+        
+    app.post('/instructorAllClasses', async(req, res) => {
+      const item = req.body
+      const result = await instructorClassesCollection.insertOne(item)
       res.send(result)
     })
     app.put('/instructorAllClasses/:id', async(req, res) => {
@@ -127,25 +133,7 @@ async function run() {
         const result = await instructorClassesCollection.updateOne(filter, updateDoc)
         res.send(result)
     })
-    
-    app.post('/instructorClasses', async(req, res) => {
-        const item = req.body
-        const result = await instructorClassesCollection.insertOne(item)
-        res.send(result)
-    })
-    app.put('/instructorClasses/:id', async(req, res) => {
-        const id = req.params.id
-        const filter = {_id: new ObjectId(id)}
-        const updateStatus= req.body
-        const updateDoc = {
-            $set:{
-                status: updateStatus.status,
-            }
-        }
-        const result = await instructorClassesCollection.updateOne(filter, updateDoc)
-        res.send(result)
-    })
-    app.patch('/instructorClasses/:id', async(req, res) => {
+    app.patch('/instructorAllClasses/:id', async(req, res) => {
       const id = req.params.id
       const filter = {_id: new ObjectId(id)}
       const feedback = req.body
