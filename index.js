@@ -247,14 +247,6 @@ async function run() {
 run().catch(console.log);
 
 
-
-
-
-
-
-
-
-
 app.get('/', (req, res) => {
   res.send('SportyZone is running')
 })
